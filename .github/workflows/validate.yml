@@ -1,0 +1,60 @@
+name: validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Weekly: catches the catalog going stale because an upstream release
+    # moved, not because anyone touched this repository — the `upstream`
+    # job asks PyPI directly; everything else resolves committed locks.
+    - cron: "0 6 * * 1"
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: offline gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # No dependencies to install: the tooling is stdlib-only by design.
+      - name: make validate
+        run: make validate STRICT=1
+      - name: lint report
+        if: always()
+        run: python3 scripts/lint_repo.py --json > lint-report.json || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lint-report
+          path: lint-report.json
+
+  install:
+    name: install every project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: make check-all
+        run: make check-all KEEP_GOING=1
+
+  upstream:
+    name: upstream release check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: make outdated
+        run: make outdated

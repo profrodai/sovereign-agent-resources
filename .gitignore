@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+.sovereign/
+governance/
+sovereign.toml
+lint-report.json
