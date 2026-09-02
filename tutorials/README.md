@@ -2,6 +2,8 @@
 
 End-to-end walkthroughs, each self-contained and runnable. **Accepting contributions.**
 
-None yet — the first tutorials will walk the book's Chapter 0 shift and the
-live-demo governance loop step by step. To contribute one, follow
-[docs/RESOURCE_TEMPLATE.md](../docs/RESOURCE_TEMPLATE.md).
+| Tutorial | What it shows | Requirements |
+|---|---|---|
+| [`capability-authoring`](capability-authoring/) | Build a typed capability, declare its effects and example, supply the runner-owned `ToolContext`, register and invoke it, and read the structured `CapabilityResult` | uv (no keys, no accounts, no network) |
+
+To contribute one, follow [docs/RESOURCE_TEMPLATE.md](../docs/RESOURCE_TEMPLATE.md).
