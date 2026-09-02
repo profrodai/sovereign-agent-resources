@@ -72,6 +72,43 @@ class PinTests(unittest.TestCase):
         self.assertIsNone(pattern.search('"sovereign-agent-extras==9.9.9"'))
 
 
+class ScaffoldTests(unittest.TestCase):
+    def test_scaffold_refuses_bad_names_and_existing_dirs(self):
+        import subprocess
+        script = str(Path(__file__).resolve().parent / "new_resource.py")
+        bad = subprocess.run(
+            [sys.executable, script, "--category", "patterns", "--name", "Bad_Name"],
+            capture_output=True, text=True,
+        )
+        self.assertNotEqual(bad.returncode, 0)
+        self.assertIn("kebab-case", bad.stderr)
+        exists = subprocess.run(
+            [sys.executable, script, "--category", "examples", "--name", "zeocore-examples"],
+            capture_output=True, text=True,
+        )
+        self.assertNotEqual(exists.returncode, 0)
+        self.assertIn("never overwriting", exists.stderr)
+
+    def test_scaffold_output_carries_current_pins_and_metadata(self):
+        # Render the templates directly against the real pins; no writes.
+        import new_resource
+        sa = catalog.read_pin("sovereign-agent")
+        zc = catalog.read_pin("zeocore")
+        pyproject = new_resource.PYPROJECT.format(name="x", sa_pin=sa, zc_pin=zc)
+        self.assertIn(f'"sovereign-agent=={sa}"', pyproject)
+        readme = new_resource.README.format(title="X", sa_pin=sa, zc_pin=zc)
+        for field in ("Author:", "Verified on:", "Verified with:"):
+            self.assertIn(field, readme)
+
+
+class MetadataLintTests(unittest.TestCase):
+    def test_every_real_project_readme_carries_the_metadata_block(self):
+        for p in catalog.discover():
+            head = (p.path / "README.md").read_text(encoding="utf-8")[:1500]
+            for field in ("Author:", "Verified on:", "Verified with:"):
+                self.assertIn(field, head, f"{p.rel} missing {field}")
+
+
 class RealCatalogTests(unittest.TestCase):
     def test_real_catalog_has_no_drift(self):
         for p in catalog.maintained():

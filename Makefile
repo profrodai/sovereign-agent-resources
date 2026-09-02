@@ -28,7 +28,7 @@ PROJECTS := $(shell $(LIST) --paths-only 2>/dev/null)
 
 .DEFAULT_GOAL := help
 .PHONY: help list status outdated latest migrate migrate-dry update \
-        validate verify-fast verify lint test-scripts \
+        validate verify-fast verify lint test-scripts new-resource \
         lock-all install-all check-all ci
 
 help: ## Show this help
@@ -87,6 +87,10 @@ update: ## The routine bump: newest of both packages, then validate
 	@$(MIGRATE) --package zeocore --latest
 	@$(MAKE) --no-print-directory lock-all
 	@$(MAKE) --no-print-directory validate
+
+new-resource: ## Scaffold a resource: make new-resource CATEGORY=patterns NAME=my-resource
+	@test -n "$(CATEGORY)" -a -n "$(NAME)" || { echo "usage: make new-resource CATEGORY=patterns NAME=my-resource"; exit 2; }
+	@$(PYTHON) $(SCRIPTS)/new_resource.py --category $(CATEGORY) --name $(NAME)
 
 lint: ## Static checks only (--json via scripts/lint_repo.py)
 	@$(LINT) $(STRICT_ARGS)

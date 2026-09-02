@@ -96,10 +96,12 @@ the catalog has gone stale.
 
 ## Contributing
 
-Start with [CONTRIBUTING.md](CONTRIBUTING.md) and the
-[resource template](docs/RESOURCE_TEMPLATE.md). The short version: a resource
-is a directory with a `README.md`, a `pyproject.toml` pinned to the catalog
-versions, a committed `uv.lock`, and something a stranger can run.
+Start with [CONTRIBUTING.md](CONTRIBUTING.md); AI agents get the same
+contract as a deterministic procedure in [AGENTS.md](AGENTS.md). The short
+version: `make new-resource CATEGORY=patterns NAME=my-resource` scaffolds a
+directory with a pinned `pyproject.toml` and the required metadata block —
+fill it with something a stranger can run, `uv lock`, and pass
+`make validate`.
 
 ## License
 

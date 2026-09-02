@@ -1,5 +1,14 @@
 # zeocore example: metrics tracker
 
+```text
+Author:        Rod Rivera
+Verified on:   2026-09-02
+Verified by:   Sparring (sovereign-agent), operated by Rod Rivera
+Verified with: zeocore 0.6.0, uv
+Audience:      Builders learning governed metric collection on zeocore
+Time:          ~30 minutes
+```
+
 A [zeocore](https://github.com/zeroemployeeorg/zeocore)-powered rebuild of
 [`business-transformation-tracker`](https://github.com/zeroemployeeorg/business-transformation-tracker)'s
 weekly self-reported metrics tracking. Part of

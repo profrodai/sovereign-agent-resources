@@ -1,5 +1,14 @@
 # zeocore example: data cleaning
 
+```text
+Author:        Rod Rivera
+Verified on:   2026-09-02
+Verified by:   Sparring (sovereign-agent), operated by Rod Rivera
+Verified with: zeocore 0.6.0, uv
+Audience:      Builders learning typed zeocore tools on real CSV work
+Time:          ~30 minutes
+```
+
 A [zeocore](https://github.com/zeroemployeeorg/zeocore)-powered rebuild of
 [`agency-data-onboarding-kit`](https://github.com/zeroemployeeorg/agency-data-onboarding-kit)'s
 B2B contact/company CSV cleaning pipelines. Part of
