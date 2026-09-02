@@ -1,5 +1,14 @@
 # zeocore example: Google Doc to Bluesky
 
+```text
+Author:        Rod Rivera
+Verified on:   2026-09-02
+Verified by:   Sparring (sovereign-agent), operated by Rod Rivera
+Verified with: zeocore 0.6.0, uv
+Audience:      Builders learning a governed document-to-social pipeline
+Time:          ~30 minutes
+```
+
 Read the text of a **Google Doc** and publish it to **Bluesky**, using
 [zeocore](https://github.com/zeroemployeeorg/zeocore) integrations. Part of
 [`zeocore-examples`](../../README.md) — read that top-level README first for

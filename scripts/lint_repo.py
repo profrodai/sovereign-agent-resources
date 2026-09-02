@@ -6,7 +6,8 @@
     python scripts/lint_repo.py --strict   # warnings count as findings
 
 Checks:
-- every project has README.md alongside pyproject.toml;
+- every project has README.md alongside pyproject.toml, opening with the
+  CONTRIBUTING.md metadata block (Author / Verified on / Verified with);
 - every MAINTAINED project's governed pins match the root pin files;
 - every maintained project with a governed pin has a committed uv.lock
   (reproducibility is the catalog's promise) — warning until first lock;
@@ -37,9 +38,19 @@ def main() -> int:
     warnings: list[str] = []
 
     projects = catalog.discover()
+    METADATA_LINES = ("Author:", "Verified on:", "Verified with:")
     for p in projects:
-        if not (p.path / "README.md").is_file():
+        readme = p.path / "README.md"
+        if not readme.is_file():
             errors.append(f"{p.rel}: missing README.md")
+        else:
+            head = readme.read_text(encoding="utf-8")[:1500]
+            for field in METADATA_LINES:
+                if field not in head:
+                    errors.append(
+                        f"{p.rel}: README missing metadata line {field!r} "
+                        "(see CONTRIBUTING.md metadata block)"
+                    )
         if p.tier == "maintained":
             for pkg, (have, want) in p.drift().items():
                 errors.append(f"{p.rel}: {pkg}=={have} drifted from root pin {want}")

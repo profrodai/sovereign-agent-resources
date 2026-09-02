@@ -1,5 +1,14 @@
 # A Real Agent, Governed — a live Sovereign Agent demo
 
+```text
+Author:        Rod Rivera
+Verified on:   2026-09-02
+Verified by:   Sparring (sovereign-agent), operated by Rod Rivera
+Verified with: sovereign-agent 1.1.1 / zeocore 0.6.0, uv
+Audience:      Practitioners who want to watch a real local model be governed
+Time:          ~20 minutes (plus one-time model download)
+```
+
 > A real language model, running **on your own laptop**, helps run **Lucy's ice
 > cream shop**: it makes a real tool call to look up inventory, then proposes a
 > restock. A tiny "company" written in Python **checks that proposal against
