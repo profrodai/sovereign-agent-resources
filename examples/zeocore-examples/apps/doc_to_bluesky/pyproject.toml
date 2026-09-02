@@ -20,3 +20,6 @@ dev = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/doc_to_bluesky"]
+
+[tool.sovereign-catalog]
+smoke = "python run_demo.py"

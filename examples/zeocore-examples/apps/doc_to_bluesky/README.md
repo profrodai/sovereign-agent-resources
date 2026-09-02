@@ -188,10 +188,15 @@ Making this actually authenticate needs a real YAML config file (via
 `credentials_file` keys) — the exact shape was not pinned down further here,
 on purpose: this repo never calls the live Google API, and guessing past
 what was verified would trade one honest gap for a fabricated instruction.
-Treat the constructor snippet above as unresolved for Docs; check zeocore's
-own docs or source (`zeo_core/integrations/google/docs/service.py`,
-`zeo_core/integrations/core/base.py`) before building a real Docs
-integration against it.
+This is a located defect in zeocore 0.6.0, not an open question:
+`docs/service.py` calls `super().initialize()` first and returns early when
+the base's config lookup fails, so `_initialize_config()` — the method that
+would honour `custom_config` — is never reached. The constructor args ARE
+stored (`custom_config` is populated); nothing on that path consumes them.
+`GoogleCalendarService` differs structurally: it resolves config eagerly and
+has no `custom_config` attribute at all, which is why the two integrations
+behave differently. Until that is fixed upstream, use a real YAML config file
+via `config_path=` for Docs; constructor args alone will not work.
 
 ```python
 ctx = ToolContext(services={"google_docs": docs, "bluesky": bluesky})
