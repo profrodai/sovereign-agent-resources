@@ -1,24 +1,29 @@
-"""FULL end-to-end LIVE governed run using the BUILT-IN ollama provider.
+"""FULL end-to-end LIVE governed run with Ollama, OpenAI, or Anthropic.
 
-Since sovereign-agent 1.1.0, Ollama support is first-class: you bind an actor to
-the shipped `ollama` provider and point it at a local model with one environment
-variable. No custom provider code. A real local model PROPOSES a restock, and
+The resource-local adapter changes only the intelligence transport. A real model
+PROPOSES a restock, and
 the Sovereign Agent validates, COMMITS atomically, verifies, and accepts -- the
 whole governed loop. Not scripted.
 
-Run:  python demo_full_governance.py
+Run:  python demo_full_governance.py --provider ollama|openai|anthropic
 """
 
 from __future__ import annotations
 
 import json
-import os
 import sys
 import tempfile
 from pathlib import Path
 
 from sovereign_agent.models import Role
 from sovereign_agent.organization import Organization
+from sovereign_agent.providers import PROVIDERS
+from sovereign_agent.providers.base import (
+    InvocationRequest,
+    InvocationSpec,
+    ProviderCapabilities,
+    parse_json_line,
+)
 from reference_organizations.store import (
     CatalogEntry,
     Product,
@@ -28,6 +33,7 @@ from reference_organizations.store import (
     record_sale,
     seed_catalog,
 )
+from model_provider import ProviderConfig, parse_provider_argument
 
 SKU = "SKU-VANILLA"
 
@@ -47,16 +53,58 @@ ICE_CREAM = (
 )
 
 
+class DemoModelProvider:
+    """Bind Sovereign Agent to this resource's provider-neutral worker."""
+
+    name = "demo-model"
+    executable = "python"
+    requires_terminal_event = False
+
+    def __init__(self, config: ProviderConfig) -> None:
+        self.config = config
+        self.name = f"demo-{config.name}"
+
+    def probe(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            available=True,
+            version=f"{self.config.name}:{self.config.model}",
+            print_mode=True,
+            streaming=True,
+            structured_result=True,
+            workspace_write=True,
+        )
+
+    def build_invocation(self, request: InvocationRequest) -> InvocationSpec:
+        environment = {
+            "SOVEREIGN_DEMO_PROVIDER": self.config.name,
+            f"{self.config.name.upper()}_MODEL": self.config.model,
+            f"{self.config.name.upper()}_URL": self.config.url,
+        }
+        if self.config.api_key:
+            environment[f"{self.config.name.upper()}_API_KEY"] = self.config.api_key
+        return InvocationSpec(
+            argv=[
+                "python",
+                str(Path(__file__).with_name("demo_provider_worker.py").resolve()),
+                str(request.output),
+                request.prompt,
+            ],
+            cwd=request.workspace,
+            env=environment,
+        )
+
+    def parse_event(self, line: str):
+        return parse_json_line(line)
+
+
 def main() -> int:
-    # The built-in `ollama` provider reads SOVEREIGN_AGENT_LLM_MODEL (and
-    # SOVEREIGN_AGENT_LLM_BASE_URL, default http://localhost:11434/v1). Point it
-    # at whichever local model you pulled.
-    model = os.environ.get("SOVEREIGN_DEMO_MODEL", "qwen3:latest")
-    os.environ["SOVEREIGN_AGENT_LLM_MODEL"] = model
+    config = parse_provider_argument(__doc__ or "Full governed model demo")
+    provider = DemoModelProvider(config)
+    PROVIDERS[provider.name] = provider
 
     root = Path(tempfile.mkdtemp(prefix="sovereign-full-"))
     print("=" * 74)
-    print(f"SOVEREIGN AGENT — FULL governed run, built-in ollama provider, model = {model}")
+    print(f"SOVEREIGN AGENT — FULL governed run via {config.name}, model = {config.model}")
     print("=" * 74)
 
     org = Organization.init(root)
@@ -88,10 +136,11 @@ def main() -> int:
     org.ready_sow(sow.id)
     assignment = org.assign(sow.id, "operator-course", "master-course")
 
-    # Bind the actor to the SHIPPED ollama provider, then run the real governed path.
-    org.rebind_actor("operator-course", "ollama", "principal-human")
-    print("\n2) Actor operator-course bound to the built-in 'ollama' provider. Running the")
-    print(f"   assignment — {model} reads the scope and proposes a governed ActorReport...\n")
+    # Bind the actor to the resource's provider-neutral adapter, then run the
+    # unchanged governed path.
+    org.rebind_actor("operator-course", provider.name, "principal-human")
+    print(f"\n2) Actor operator-course bound to {config.name}. Running the assignment —")
+    print(f"   {config.model} reads the scope and proposes a governed ActorReport...\n")
     assignment = org.run_assignment(assignment.id)
 
     report_path = root / ".sovereign" / "runs" / assignment.workspace_id / ".sovereign-out" / "report.json"
@@ -100,7 +149,7 @@ def main() -> int:
     print(f"3) The model's governed ActorReport: status={report['status']}, proposed={proposed} units.")
     if not proposed:
         print("   (The model did not propose a positive quantity this run — re-run, or use the")
-        print("    bigger model: SOVEREIGN_DEMO_MODEL=qwen3.6:35b python demo_full_governance.py)")
+        print("    retry, or choose another model in .env.)")
         return 1
 
     proposal = RestockProposal(sku=SKU, quantity=proposed)
@@ -119,7 +168,7 @@ def main() -> int:
     print(f"   inventory now: on_hand={after['on_hand']} (>= reorder {after['reorder_point']}) — tub genuinely full")
     print(f"   cash ledger: {[(c['id'].split('_')[0], c['amount_cents']) for c in cash]}")
     print(f"\n   status: {org.status_text(outcome.id).splitlines()[0]}")
-    print("\nDONE — a real local model, via sovereign-agent's built-in ollama provider,")
+    print(f"\nDONE — a real model, via {config.name},")
     print("proposed work that flowed through the FULL governance loop to an accepted outcome.")
     return 0
 
