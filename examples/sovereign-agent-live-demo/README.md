@@ -28,6 +28,11 @@ idea you will use for the rest of your career with AI agents:
 You will run three things, in order. The first is offline and always works. The
 next two use a real local model.
 
+Teaching this today? Use the measured, operator-facing
+[`CLASS-RUNBOOK-2026-09-03.md`](CLASS-RUNBOOK-2026-09-03.md). It includes the
+verified run order, fallback, and exact Google/Bluesky credential preparation
+without making live publishing part of setup.
+
 ---
 
 ## What you need (read this first)
