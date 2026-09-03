@@ -24,7 +24,12 @@ if ! command -v ollama >/dev/null 2>&1; then
   exit 1
 fi
 MODEL="${SOVEREIGN_DEMO_MODEL:-qwen3:latest}"
-if ! ollama list 2>/dev/null | grep -q "${MODEL%%:*}"; then
+OLLAMA_MODELS="$(ollama list 2>/dev/null)"
+# Do not pipe `ollama list` into `grep -q` under `set -o pipefail`: grep exits
+# as soon as it matches, Ollama receives SIGPIPE, and the pipeline is reported
+# as failed even though the model is present. Capturing the short listing first
+# keeps the idempotency check honest and avoids re-pulling several gigabytes.
+if ! grep -F "$MODEL" <<<"$OLLAMA_MODELS" >/dev/null; then
   echo "    pulling model $MODEL (this is a few GB, one time) ..."
   ollama pull "$MODEL"
 else
