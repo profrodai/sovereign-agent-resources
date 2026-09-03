@@ -47,6 +47,282 @@ The current catalog demo uses Ollama. It does not claim an API-model path that
 has not been implemented or exercised. If the network or model fails during
 class, Step 1 is the honest guaranteed fallback.
 
+## The idea to explain before running anything
+
+The three commands separate three concerns that are easy to blur together:
+
+1. **Sovereign Agent governs the work.** It records the desired outcome, scope,
+   actor assignment, execution, evidence, review, and final acceptance.
+2. **Ollama supplies intelligence, not authority.** `qwen3:latest` may inspect
+   information and propose a quantity. It cannot write inventory, choose the
+   price, approve itself, or declare the outcome accepted.
+3. **ZeoCore defines the typed tool boundary in Step 2.** It turns a Python
+   function into a capability with request and response models, a declared
+   `READ` effect, metadata, and validated invocation.
+
+The sequence demonstrates these layers progressively:
+
+```text
+Step 1  Sovereign Agent governance + deterministic scripted provider
+Step 2  Ollama reasoning + a typed ZeoCore read capability + governance refusal
+Step 3  Ollama reasoning + the full Sovereign Agent effect and acceptance loop
+```
+
+The sequence as a whole demonstrates Sovereign Agent, Ollama, and ZeoCore.
+Step 3 does not secretly call the ZeoCore tool from Step 2: the assignment scope
+contains the current stock figures, and the built-in Ollama provider returns an
+`ActorReport`. That separation is intentional and should be stated in class.
+
+## Before the demo: what setup is doing
+
+`bash setup.sh` performs four visible operations:
+
+1. It checks that `uv` is installed.
+2. It runs `uv sync`, which creates or updates the resource's isolated `.venv`
+   from `pyproject.toml` and `uv.lock`. The lock selects Sovereign Agent 1.1.1
+   and ZeoCore 0.6.0 from PyPI; the demo does not import a neighboring source
+   checkout by accident.
+3. It checks for Ollama and pulls `qwen3:latest` only when the model is absent.
+4. It sends an empty prompt once so Ollama loads the model before students are
+   waiting on the first real inference.
+
+`ollama list` then proves that the model is installed on this machine. The warmup
+command starts or loads the model, but it creates no Sovereign Agent outcome and
+changes no shop ledger:
+
+```bash
+ollama list
+printf '' | ollama run qwen3:latest
+```
+
+No cloud model or API key is involved. The two live scripts talk to the local
+Ollama server over HTTP.
+
+## Step 1 — prove the governance loop without depending on a model
+
+```bash
+uv run sovereign-agent demo store --mode simulated
+```
+
+This invokes the installed Sovereign Agent CLI. Its `_demo` command dispatches
+to `reference_organizations.store.demo.run_simulated`. The provider is scripted,
+so the result is deterministic and remains available if Ollama fails during the
+class.
+
+Behind the scenes, the call path is:
+
+```text
+sovereign-agent CLI
+  -> run_simulated(current directory)
+  -> Organization.init(...)
+  -> seed the tea product, inventory, and opening cash
+  -> create_outcome(...) and activate(...)
+  -> record_sale(...)
+  -> create_sow(...) -> ready_sow(...) -> assign(...)
+  -> run_assignment(...) using the scripted provider
+  -> read .sovereign-out/report.json
+  -> convert the report into a RestockProposal
+  -> apply_restock(...) in one database transaction
+  -> verify_outcome(...) -> review(...) -> accept(...)
+  -> status_text(...)
+```
+
+What each part means:
+
+- `Organization.init` creates or opens the `.sovereign` SQLite ledger beneath
+  the current demo directory.
+- The outcome declares a desired state—tea at or above its reorder point—and
+  three executable checks: inventory level, cash reconciliation, and a durable
+  replenishment event.
+- `record_sale` reduces inventory, credits the cash ledger, and writes the
+  durable `sig_...` inventory signal in the same transaction.
+- The `sow_...` record is the bounded unit of work. It requires a
+  `replenishment` effect, so an unrelated successful action cannot satisfy it.
+- The scripted provider writes a proposal to the assignment workspace. The
+  framework parses that report fail-closed: absent JSON, malformed JSON, or a
+  non-integer quantity is refused rather than guessed.
+- `apply_restock` does not trust the proposal as permission. Under one immediate
+  database transaction it verifies the assignment, actor authority, outcome
+  subject, quantity bound, real product cost, and available cash; then it
+  updates inventory, debits cash, records the effect, resolves the signal, and
+  appends the event.
+- Verification runs before review. Acceptance then re-executes the declared
+  checks against current state, requires the stored evidence still to match
+  that state, and prevents the performer from accepting its own work.
+
+Read the output accordingly:
+
+```text
+out_... ACCEPTED Keep the tea jar stocked
+  sow_... ACCEPTED Manually dispatched replenishment after signal sig_...
+outcome ACCEPTED
+```
+
+`sig_` identifies the observed condition, `sow_` the governed work, and `out_`
+the desired outcome. `ACCEPTED` is not the provider saying “done”; it is the
+terminal governance state reached after effect, verification, review, and
+acceptance. This step proves that lifecycle, but it proves neither live model
+reasoning nor ZeoCore tool calling.
+
+## Step 2 — let the model call a real, typed ZeoCore capability
+
+```bash
+uv run python demo_tool_calling.py
+```
+
+Open [`demo_tool_calling.py`](demo_tool_calling.py) while explaining this step.
+It creates a temporary SQLite organization database and seeds two independent
+products. Vanilla starts at 4 units with a reorder point of 3. A sale of 2
+leaves 2 units and creates the printed `sig_...` record. Chocolate is present
+as a second product so the example is genuinely SKU-specific rather than a
+single hard-coded stock slot.
+
+### The ZeoCore portion
+
+The `InspectInventoryRequest` and `InspectInventoryResponse` Pydantic models
+define the only accepted input and the typed output. The `@capability`
+decorator adds:
+
+- the stable id `store.inspect_inventory@1.0.0`;
+- a description telling the actor to inspect rather than guess;
+- a declared `{EffectKind.READ}` effect; and
+- an example request and response.
+
+`bound_capability_of(inspect_inventory)` produces a bound definition containing
+that metadata and the request model. `run_actor` turns the request model into
+JSON Schema with `model_json_schema()` and sends that schema to Ollama as its
+one available function.
+
+The tool itself opens the SQLite database using `mode=ro`, performs a
+parameterized lookup for the requested SKU, and returns either
+`CapabilityResult.ok(InspectInventoryResponse(...))` or a typed `NO_SKU`
+failure. The tool has no write path.
+
+### The model/tool conversation
+
+`run_actor` sends Ollama a system message saying that the actor may only
+**propose**, must inspect current inventory, and should return
+`RESTOCK_UNITS: <integer>`. Then this loop occurs:
+
+```text
+Python sends prompt + ZeoCore-derived function schema to Ollama /api/chat
+  -> qwen chooses inspect_inventory({"sku": "SKU-VANILLA"})
+  -> Pydantic validates the model-generated arguments
+  -> invoke_sync executes the bound ZeoCore capability
+  -> the read-only ledger result is returned to qwen as a tool message
+  -> qwen proposes RESTOCK_UNITS: 1
+```
+
+That is why these two output lines are different kinds of evidence:
+
+```text
+qwen CALLED zeocore tool inspect_inventory(...) -> {...}
+qwen SAID: RESTOCK_UNITS: 1
+```
+
+The first proves a real tool invocation reached the database. The second is
+only the model's proposal.
+
+### The governance portion
+
+The script converts the number to `RestockProposal(sku="SKU-VANILLA",
+quantity=units)` and passes it to Sovereign Agent's `validate_restock`. That
+trusted Python boundary independently rereads the product and inventory rows.
+It enforces a positive quantity, a maximum of 50, a known product, an existing
+inventory row, and sufficient cash. It obtains the 250-cent unit cost from the
+product record; the model never gets to supply the cost or cash amount.
+
+The second validation with quantity `9999` is an adversarial control. It proves
+that a syntactically valid model proposal is not authority and that the bound is
+behavioral, not merely documentation:
+
+```text
+9999 > MAX_RESTOCK_UNITS (50) -> Refusal -> no restock
+```
+
+Important boundary: this script calls `validate_restock`, not `apply_restock`.
+It deliberately demonstrates inspection, proposal, and refusal without
+committing the proposed replenishment. The only mutation is the fixture sale
+that creates the condition the actor must reason about.
+
+## Step 3 — run the proposal through commit, proof, review, and acceptance
+
+```bash
+uv run python demo_full_governance.py
+```
+
+Open [`demo_full_governance.py`](demo_full_governance.py) for this narration.
+It uses another temporary organization and the same two-product ice-cream
+fixture. The full flow is:
+
+```text
+Organization.init + seed_catalog
+  -> create and activate outcome with three acceptance checks
+  -> atomically record sale + cash credit + durable signal
+  -> create, ready, and assign a replenishment SOW
+  -> bind operator-course to Sovereign Agent's built-in ollama provider
+  -> run_assignment -> qwen writes a governed ActorReport
+  -> parse proposed_restock_units
+  -> apply_restock under an immediate database transaction
+  -> verify outcome checks
+  -> independent SOW review
+  -> Principal acceptance, with checks re-run against current state
+```
+
+The provider configuration is real but small. The script copies
+`SOVEREIGN_DEMO_MODEL`—default `qwen3:latest`—to
+`SOVEREIGN_AGENT_LLM_MODEL`. Sovereign Agent's shipped `ollama` provider talks
+to Ollama's OpenAI-compatible endpoint at `http://localhost:11434/v1` unless
+`SOVEREIGN_AGENT_LLM_BASE_URL` overrides it.
+
+Unlike Step 2, the model receives the current `on_hand` and `reorder_point` in
+the SOW scope. It does not receive the `inspect_inventory` tool. Its output is
+written as `.sovereign-out/report.json` in the assignment workspace and parsed
+as an `ActorReport`. A completed report is still not an applied effect.
+
+`apply_restock` is the effect boundary. It first proves that the assignment is
+real, completed, authorized for a replenishment effect, and attached to the
+same outcome subject. Inside the same database lock it revalidates quantity,
+catalog membership, cost, and cash. It then performs all of these together:
+
+- inventory `2 + 1 -> 3`;
+- cash purchase entry `-250` cents;
+- durable replenishment effect tied to the assignment and outcome;
+- resolution of the originating sale signal; and
+- append-only `replenishment.committed` event.
+
+The effect table has a uniqueness constraint over assignment, kind, and
+subject, so replaying the same authorized effect returns the recorded result
+instead of purchasing twice.
+
+The final cash output is a compact audit trail:
+
+```text
+('cash-opening', 10000)  opening balance
+('cash', 1000)           sale: 2 tubs x 500 cents
+('cash', -250)           replenishment: 1 tub x trusted 250-cent cost
+```
+
+Finally, `verify_outcome` runs the declared checks and stores evidence,
+`review` changes the SOW only after that evidence exists, and `accept` checks
+the outcome again at acceptance time. Therefore the printed result:
+
+```text
+COMMITTED + VERIFIED + ACCEPTED
+```
+
+names three different facts. “Committed” means the ledger changed atomically;
+“verified” means the checks observed the required state; “accepted” means the
+governance chain admitted that evidence and independently confirmed the state
+still held. The model performs none of those authority-bearing transitions.
+
+## The one-sentence class takeaway
+
+The model can inspect and propose; typed tools constrain what it can ask and
+what data it receives; the governed runtime independently decides whether an
+effect is authorized, records it atomically, proves the resulting state, and
+only then accepts the outcome.
+
 ## Other catalog demos verified today
 
 From the repository root:
