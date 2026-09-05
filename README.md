@@ -41,6 +41,7 @@ Then go deeper, in order:
 
 | Resource | What you watch happen | Path |
 |---|---|---|
+| Six advanced patterns | Isolation, scheduling, context, fencing, discovery, and memory fail safely in six offline labs | [`examples/sovereign-agent-advanced-patterns`](examples/sovereign-agent-advanced-patterns) |
 | Live governance demo | A real local model proposes a restock; deterministic Python re-validates it against the ledger and **refuses 9999 units** | [`examples/sovereign-agent-live-demo`](examples/sovereign-agent-live-demo) |
 | Data cleaning on zeocore | B2B contact/company CSV cleaning as typed tools | [`examples/zeocore-examples/apps/data_cleaning`](examples/zeocore-examples/apps/data_cleaning) |
 | Doc → Bluesky pipeline | A document becomes governed social posts | [`examples/zeocore-examples/apps/doc_to_bluesky`](examples/zeocore-examples/apps/doc_to_bluesky) |
