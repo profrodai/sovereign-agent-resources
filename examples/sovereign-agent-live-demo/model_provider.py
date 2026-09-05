@@ -11,12 +11,13 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import re
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+from zeo_core.config import load_dotenv_file
 
 PROVIDERS = ("ollama", "openai", "anthropic")
 DEFAULT_MODELS = {
@@ -29,7 +30,7 @@ DEFAULT_URLS = {
     "openai": "https://api.openai.com/v1/chat/completions",
     "anthropic": "https://api.anthropic.com/v1/messages",
 }
-_KEY = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+PROVIDER_TIMEOUT_SECONDS = 45.0
 
 
 class ProviderConfigurationError(ValueError):
@@ -54,28 +55,9 @@ class ProviderConfig:
 
 
 def load_dotenv(path: Path | None = None) -> Path:
-    """Load simple KEY=value lines without overriding the process environment.
-
-    This intentionally does not execute shell syntax or interpolate variables.
-    """
+    """Explicitly load provider configuration through ZeoCore."""
     env_path = path or Path(__file__).with_name(".env")
-    if not env_path.is_file():
-        return env_path
-    for line_number, raw in enumerate(env_path.read_text(encoding="utf-8").splitlines(), 1):
-        line = raw.strip()
-        if not line or line.startswith("#"):
-            continue
-        if line.startswith("export "):
-            line = line[7:].lstrip()
-        if "=" not in line:
-            raise ProviderConfigurationError(f"{env_path.name}:{line_number}: expected KEY=value")
-        key, value = line.split("=", 1)
-        key, value = key.strip(), value.strip()
-        if not _KEY.fullmatch(key):
-            raise ProviderConfigurationError(f"{env_path.name}:{line_number}: invalid variable name")
-        if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
-            value = value[1:-1]
-        os.environ.setdefault(key, value)
+    load_dotenv_file(env_path, override=False)
     return env_path
 
 
@@ -181,7 +163,7 @@ def chat(
     messages: list[dict[str, Any]],
     tools: list[dict[str, Any]] | None = None,
     *,
-    timeout: float = 120.0,
+    timeout: float = PROVIDER_TIMEOUT_SECONDS,
 ) -> dict[str, Any]:
     """Return one provider-neutral assistant message."""
     tools = tools or []

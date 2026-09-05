@@ -25,8 +25,10 @@ The provider changes; the tool contract, ledger validation, bounds, commit,
 verification, and acceptance do not. An actor is not a model: the model
 proposes and governed code decides.
 
-Teaching this? Use
-[`CLASS-RUNBOOK-2026-09-03-Rev-2.md`](CLASS-RUNBOOK-2026-09-03-Rev-2.md).
+Teaching this? Start with
+[`CLASS-RUNBOOK-2026-09-05-Rev-3.md`](CLASS-RUNBOOK-2026-09-05-Rev-3.md);
+it binds the timeout and ZeoCore credential-loading corrections and points to
+the full Rev 2 narration.
 
 ## 1. Install and choose one provider
 
@@ -179,5 +181,5 @@ This does not claim live cloud execution without operator-supplied credentials.
 | `demo_provider_worker.py` | turns a selected model response into an advisory `ActorReport` |
 | `demo_tool_calling.py` | Stage 2: ZeoCore tool call and refusal proof |
 | `demo_full_governance.py` | Stage 3: full governed organization loop |
-| `test_model_provider.py` | offline behavioral checks for all provider branches |
+| `test_model_provider.py` | offline unit and six-path end-to-end provider checks |
 | `setup.sh` | idempotent provider-aware setup |
