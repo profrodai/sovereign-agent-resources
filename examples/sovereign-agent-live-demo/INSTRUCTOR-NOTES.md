@@ -3,10 +3,13 @@
 Student-facing guide is `README.md`. This file is just for you: timing, talking
 points, and what to do if the room's laptops fight back. **Verified end-to-end
 on 2026-08-31** against `sovereign-agent==1.0.0` + `zeocore==0.5.0` from PyPI, in
-a clean venv, with the small model `qwen3:latest`.
+a clean venv, with the small model `qwen3:latest`. The current resource also
+supports OpenAI and Anthropic through the same provider-neutral demo boundary;
+see `CLASS-RUNBOOK-2026-09-03-Rev-2.md`.
 
 ## Before class
-- On the projector machine, run `bash setup.sh` once and warm the model.
+- On the projector machine, choose one provider and run `bash setup.sh ollama`,
+  `bash setup.sh openai`, or `bash setup.sh anthropic` once.
 - Tell students to run `bash setup.sh` at home (the model download is the slow
   part — don't do 30 downloads live on the ITAM wifi). If they can't, they can
   still watch and do **Step 1** (offline) live.
@@ -20,8 +23,8 @@ a clean venv, with the small model `qwen3:latest`.
 | Step | Command | Time | The beat to land |
 |---|---|---|---|
 | 1 | `uv run sovereign-agent demo store --mode simulated` | ~1 s | The company only accepts work when reality matches the claim. (In the book: break the DB → verification refuses, exit 1.) |
-| 2 | `uv run python demo_tool_calling.py` | ~20–40 s | A **real** local model **calls a tool** it was handed. Then: cost comes from the ledger, and 9999 units is **refused**. |
-| 3 | `uv run python demo_full_governance.py` | ~30–60 s | The model's proposal flows through the **whole** loop to a committed, verified, **accepted** outcome. Money moved. |
+| 2 | `uv run python demo_tool_calling.py --provider PROVIDER` | ~20–40 s | A **real** model **calls a tool** it was handed. Then: cost comes from the ledger, and 9999 units is **refused**. |
+| 3 | `uv run python demo_full_governance.py --provider PROVIDER` | ~30–60 s | The model's proposal flows through the **whole** loop to a committed, verified, **accepted** outcome. Money moved. |
 
 ## Talking points
 - **Step 2, the tool call:** "Nobody told it to call the tool in code — it read
@@ -39,12 +42,16 @@ a clean venv, with the small model `qwen3:latest`.
 - `Python 3.14+ not found` → python.org or `pyenv install 3.14.3`. (Hard
   requirement of sovereign-agent 1.0.0.)
 - `Connection refused` on 11434 → Ollama app isn't running (`ollama serve`).
+- Missing cloud key → copy `.env.example` to `.env`, protect it with mode 600,
+  and fill only the selected provider's key. Never project or paste the file.
+- HTTP 401/403 → stop and correct credentials/account access; do not retry.
 - Slow first run → model loading into RAM; warm it: `printf '' | ollama run qwen3:latest`.
 - Low RAM → stay on the default small model; do **not** use the 35B option.
 - Stronger actor on a big machine: `SOVEREIGN_DEMO_MODEL=qwen3.6:35b uv run python demo_full_governance.py`.
 
 ## What's real here (in case someone asks / doubts)
-- The model runs locally via Ollama. No API key, no network call offsite.
+- With Ollama the model runs locally. With OpenAI or Anthropic, prompts and tool
+  results go to the selected vendor and the ignored `.env` supplies the key.
 - The tool is a genuine ZeoCore `@capability` with a typed schema and a declared
   READ effect (`store_tool.py`).
 - The frameworks are the **published PyPI packages**, installed into a venv —

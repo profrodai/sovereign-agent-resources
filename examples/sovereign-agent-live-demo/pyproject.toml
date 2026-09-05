@@ -13,3 +13,6 @@ dependencies = [
 [tool.uv]
 # This is a demo script collection, not an installable package.
 package = false
+
+[tool.sovereign-catalog]
+smoke = "python test_model_provider.py"

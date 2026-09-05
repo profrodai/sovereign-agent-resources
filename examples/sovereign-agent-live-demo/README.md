@@ -1,230 +1,183 @@
-# A Real Agent, Governed — a live Sovereign Agent demo
+# A Real Agent, Governed — with your choice of model provider
 
 ```text
 Author:        Rod Rivera
-Verified on:   2026-09-02
-Verified by:   Sparring (sovereign-agent), operated by Rod Rivera
+Verified on:   2026-09-03
+Verified by:   Principal (ZeoCore), operated by Rod Rivera
 Verified with: sovereign-agent 1.1.1 / zeocore 0.6.0, uv
-Audience:      Practitioners who want to watch a real local model be governed
-Time:          ~20 minutes (plus one-time model download)
+Audience:      Practitioners learning to separate model intelligence from authority
+Time:          ~20 minutes after provider setup
 ```
 
-> A real language model, running **on your own laptop**, helps run **Lucy's ice
-> cream shop**: it makes a real tool call to look up inventory, then proposes a
-> restock. A tiny "company" written in Python **checks that proposal against
-> reality before it is allowed to happen** — and refuses it when it is out of
-> bounds.
->
-> Nothing here is scripted or faked. The model really decides. The governance
-> really checks. You will watch both happen, live.
+A model helps run Lucy's ice-cream shop. It calls a typed ZeoCore capability,
+proposes a restock, and Sovereign Agent checks the proposal against the real
+ledger before anything changes.
 
-This is a hands-on companion to the **Sovereign Agent** textbook. It teaches one
-idea you will use for the rest of your career with AI agents:
+Choose the intelligence that fits your machine and account:
 
-> ### An *actor* is not a *model*.
-> A model *proposes*. A governed system *decides*. Giving a model a tool is not
-> the same as giving it authority — authority stays in code you can read.
+| Provider | Where inference runs | What you need | Default model |
+|---|---|---|---|
+| Ollama | your computer | Ollama and enough RAM | `qwen3:latest` |
+| OpenAI | OpenAI's API | `OPENAI_API_KEY` | `gpt-5-mini` |
+| Anthropic | Anthropic's API | `ANTHROPIC_API_KEY` | `claude-sonnet-4-6` |
 
-You will run three things, in order. The first is offline and always works. The
-next two use a real local model.
+The provider changes; the tool contract, ledger validation, bounds, commit,
+verification, and acceptance do not. An actor is not a model: the model
+proposes and governed code decides.
 
-Teaching this today? Use the measured, operator-facing
-[`CLASS-RUNBOOK-2026-09-03.md`](CLASS-RUNBOOK-2026-09-03.md). It includes the
-verified run order, fallback, and exact Google/Bluesky credential preparation
-without making live publishing part of setup.
+Teaching this? Use
+[`CLASS-RUNBOOK-2026-09-03-Rev-2.md`](CLASS-RUNBOOK-2026-09-03-Rev-2.md).
 
----
-
-## What you need (read this first)
-
-| Requirement | Why | How to get it |
-|---|---|---|
-| **[uv](https://docs.astral.sh/uv/)** | installs Python 3.14 and both packages for you | `curl -LsSf https://astral.sh/uv/install.sh \| sh` — or `brew install uv` |
-| **Ollama** | runs the model locally, no cloud, no API key | [ollama.com/download](https://ollama.com/download) |
-| **~6 GB free disk + ~8 GB RAM** | to hold the small model | most laptops are fine |
-| ~10 minutes | one-time download of the model | ☕ |
-
-> **No API key. No internet during the demo. No account.** The model runs on
-> your machine. This is the whole point: you can see there is no trick.
-
----
-
-## Setup (once)
+## 1. Install and choose one provider
 
 ```bash
-git clone https://github.com/zeroemployeeorg/sovereign-agent-live-demo.git
-cd sovereign-agent-live-demo
-bash setup.sh
+git clone https://github.com/profrodai/sovereign-agent-resources.git
+cd sovereign-agent-resources/examples/sovereign-agent-live-demo
 ```
 
-`setup.sh` uses **uv** to install `sovereign-agent` and `zeocore` **from
-PyPI** (exactly what you'd do in a real project — not from a source repo;
-uv supplies Python 3.14 itself), checks Ollama, downloads a small model,
-and warms it up.
+### Option A — Ollama, local and keyless
 
-<details>
-<summary>Prefer to do it by hand? (click)</summary>
+Install [Ollama](https://ollama.com/download), then run `bash setup.sh ollama`.
+Setup installs the pinned PyPI packages, pulls `qwen3:latest` only if absent,
+and warms it. Set `OLLAMA_MODEL=another-model` in `.env` to override it.
+
+### Option B — OpenAI API
+
+Create a secret project API key on the
+[OpenAI API key page](https://platform.openai.com/api-keys), then:
 
 ```bash
-uv sync                   # sovereign-agent + zeocore, from PyPI; Python 3.14 included
-ollama pull qwen3:latest  # ~5 GB, one time
+cp .env.example .env
+chmod 600 .env
 ```
-</details>
 
----
+Set these lines in `.env`:
 
-## Run it — three steps
+```dotenv
+SOVEREIGN_DEMO_PROVIDER=openai
+OPENAI_API_KEY=your-key-here
+OPENAI_MODEL=gpt-5-mini
+```
 
-Everything below runs through `uv run`, so it always uses the environment
-you just installed — no activation, same commands on macOS, Linux, and
-Windows.
+Run `bash setup.sh openai`. Setup validates configuration but makes no billed
+API call.
 
-### Step 1 — Offline warmup (no model needed): watch a company *catch a lie*
+### Option C — Anthropic API
+
+Create an API key in the
+[Anthropic Console](https://console.anthropic.com/settings/keys), then create
+and protect `.env` as above. Set:
+
+```dotenv
+SOVEREIGN_DEMO_PROVIDER=anthropic
+ANTHROPIC_API_KEY=your-key-here
+ANTHROPIC_MODEL=claude-sonnet-4-6
+```
+
+Run `bash setup.sh anthropic`. Setup validates configuration but makes no API
+call.
+
+`.env` is ignored. The loader treats it as `KEY=value` data, never executes it,
+and existing process environment variables take precedence. Never commit,
+paste, print, or screenshot the real file. Cloud providers receive the demo's
+prompts and tool results; use Ollama when data must remain local.
+
+## 2. Run the same three-stage lesson
+
+Replace `PROVIDER` with `ollama`, `openai`, or `anthropic` in both live steps.
+The explicit choice overrides `SOVEREIGN_DEMO_PROVIDER` in `.env`.
 
 ```bash
+# Deterministic fallback: no model, network, account, or key
 uv run sovereign-agent demo store --mode simulated
+
+# A real model calls a typed ZeoCore read capability; governance refuses 9999
+uv run python demo_tool_calling.py --provider PROVIDER
+
+# The model drives propose -> commit -> verify -> accept
+uv run python demo_full_governance.py --provider PROVIDER
 ```
 
-This runs the full governance loop with a *scripted* actor. It ends with a
-company that only accepts work when reality actually matches the claim. In the
-textbook you then **break the database by hand** and re-run verification — and
-the company **refuses to accept** (exit code `1`). That is the punchline:
-*verification is not a rubber stamp.*
+### Stage 1 — deterministic governance
 
-> This built-in demo is the framework's own packaged shop — it happens to sell
-> tea. Steps 2 and 3 below run **Lucy's ice cream shop**, the book's running
-> example. The governance is identical; only the products differ.
+The packaged tea-store actor is scripted so the governance loop can always be
+shown offline. The point is not intelligence; it is that an outcome becomes
+`ACCEPTED` only after evidence and verification agree with the claim.
 
-### Step 2 — LIVE: a real model calls a real tool, and gets governed
+### Stage 2 — real tool calling, bounded authority
 
-```bash
-uv run python demo_tool_calling.py
+`demo_tool_calling.py`:
+
+1. writes a sale to a disposable SQLite ledger, taking vanilla stock from 4 to 2;
+2. exposes `inspect_inventory`, a ZeoCore `@capability` with typed request and
+   response models and a declared `READ` effect;
+3. sends that capability's JSON schema to the selected model;
+4. executes the model's tool request through ZeoCore's `invoke_sync`;
+5. gives the read-only result back to the model and receives a restock proposal;
+6. asks Sovereign Agent's shop rules to re-read cost and stock from the ledger;
+7. proves the bound by passing an absurd `9999` proposal and showing refusal.
+
+`model_provider.py` normalizes Ollama, OpenAI function calls, and Anthropic
+`tool_use` blocks into one internal message shape. It does not normalize
+authority: the model has none to begin with.
+
+### Stage 3 — the full governed loop
+
+`demo_full_governance.py` initializes a disposable organization, creates an
+outcome and SOW, assigns the operator actor, and binds that actor to the chosen
+provider through a provider-specific `DemoModelProvider` registry name. The resource-local worker asks the model
+for a strict `ActorReport`. That report remains advisory. Deterministic Python
+then validates and atomically applies the proposal, another actor verifies the
+ledger, Sparring reviews the SOW, and the Principal accepts the outcome.
+
+## Provider boundary and secrets
+
+```text
+.env (ignored) -> ProviderConfig -> HTTP request -> normalized proposal
+                                      |
+                                      v
+ZeoCore typed capability -> Sovereign Agent validation -> commit/verify/accept
 ```
 
-A customer buys vanilla ice cream; stock drops **below** the reorder point. The
-job is handed to a real local model (`qwen3:latest`). It is given **one tool**,
-built with ZeoCore: `inspect_inventory`. Watch it decide to call it:
-
-```
-2) Handing the assignment to a REAL actor: qwen3:latest (local, no cloud).
-   It is given ONE tool, built with ZeoCore: inspect_inventory. Watch it call it.
-
-   qwen CALLED zeocore tool inspect_inventory({'sku': 'SKU-VANILLA'}) -> {'sku': 'SKU-VANILLA', 'on_hand': 2, 'reorder_point': 3}
-   qwen SAID: RESTOCK_UNITS: 1
-
-3) The actor PROPOSED: restock 1 units of SKU-VANILLA.
-
-4) The Sovereign Agent does NOT trust the model. It re-validates the proposal
-   against the ledger and reads the TRUE unit cost from the product record:
-   VALID: 1 units x 120c (cost read from the ledger, not from qwen) = 120c.
-
-5) Governance proof — the model's number is not authority. Try an absurd proposal:
-   REFUSED: Proposed restock of 9999 exceeds the bound of 50.
-```
-
-Two things to notice:
-- The **cost comes from the product record**, not from whatever the model said.
-- An **absurd proposal is refused** by governed code, not by the model's good
-  manners. *A provider may propose, but not without limit.*
-
-> The exact number the model proposes can vary between runs — that's what makes
-> it a real model and not a script. Governance handles whatever it proposes.
-
-### Step 3 — LIVE: the *full* governed loop, driven by the model
-
-```bash
-uv run python demo_full_governance.py
-```
-
-This time the actor is bound to sovereign-agent's **built-in `ollama` provider**
-(shipped in 1.1.0 — no custom code). The model reads the assignment and
-proposes, and the proposal flows through the **entire** pipeline — assignment →
-run → **atomic commit** → independent **verification** → principal
-**acceptance**:
-
-```
-2) Actor operator-course bound to the built-in 'ollama' provider. Running the
-   assignment — qwen3:latest reads the scope and proposes a governed ActorReport...
-3) The model's governed ActorReport: status=completed, proposed=1 units.
-4) COMMITTED + VERIFIED + ACCEPTED.
-   inventory now: on_hand=3 (>= reorder 3) — tub genuinely full
-   cash ledger: [('cash-opening', 10000), ('cash', 1000), ('cash', -250)]
-   status: out_...  ACCEPTED  Keep the vanilla tub stocked
-```
-
-A real local model's proposal became a real, verified, accepted outcome — money
-moved, stock is genuinely full — driven by the provider that ships in the box.
-
----
-
-## How it works (the three pieces)
-
-```
-   ┌─────────────┐   "how many to restock?"   ┌──────────────────────┐
-   │  qwen (LLM) │ ─────────────────────────▶ │  it decides to call  │
-   │  the ACTOR  │                            │  a tool to find out  │
-   └─────────────┘ ◀───────────────────────── └──────────┬───────────┘
-         │            {on_hand: 2, reorder: 3}            │
-         │                                                ▼
-         │                                   ┌────────────────────────┐
-         │  proposes: "restock N"            │  inspect_inventory      │
-         │                                   │  a ZEOCORE CAPABILITY   │
-         ▼                                   │  (typed, read-only)     │
-   ┌───────────────────────────────────┐    └────────────────────────┘
-   │  SOVEREIGN AGENT (governed Python)│
-   │  • re-reads the real ledger       │   the model's number is a PROPOSAL.
-   │  • reads TRUE cost from records   │   code decides what actually happens:
-   │  • enforces bounds (max 50)       │   validate → commit → verify → accept
-   │  • commits atomically, or REFUSES │   …or refuse.
-   └───────────────────────────────────┘
-```
-
-- **The tool** — the `inspect_inventory` capability defined inline in
-  `demo_tool_calling.py`. A plain Python function decorated with `@capability`
-  from **ZeoCore**, with a typed request/response and a declared `READ` effect.
-  The model is handed its JSON schema and may call it (Step 2).
-- **The actor** — the model. It *proposes*; it cannot commit anything. In Step 2
-  it's driven in-process to show a tool call; in Step 3 it's the **built-in
-  `ollama` provider** that ships with sovereign-agent 1.1.0 — bind an actor to
-  it with `provider = "ollama"` and one env var, no custom code.
-- **The governance** — `sovereign-agent`. It re-validates every proposal against
-  the real ledger, enforces limits, and only then commits — atomically — with
-  independent verification and a final acceptance step.
-
----
+- `OPENAI_API_KEY` is sent only as an HTTP bearer credential to OpenAI.
+- `ANTHROPIC_API_KEY` is sent only in Anthropic's `x-api-key` header.
+- Ollama sends no API key and defaults to `localhost`.
+- Only variables for the selected provider cross into the disposable actor
+  subprocess.
+- Keys are never copied into assignment JSON, reports, receipts, transcripts,
+  or the SQLite ledger.
 
 ## Troubleshooting
 
-| You see… | Fix |
+| Symptom | Action |
 |---|---|
-| `Python 3.14+ not found` | Install from [python.org](https://www.python.org/downloads/) or `pyenv install 3.14.3`, then re-run `setup.sh`. |
-| `ollama: command not found` | Install from [ollama.com/download](https://ollama.com/download), then re-run `setup.sh`. |
-| `Connection refused` on `localhost:11434` | Ollama isn't running. Open the Ollama app, or run `ollama serve` in another terminal. |
-| First live run is slow (30–60 s) | Normal — the model is loading into RAM. Later runs are faster. Warm it first: `printf '' \| ollama run qwen3:latest`. |
-| Laptop is low on RAM | Use the small model (default). Avoid the 35B option below. |
-| Want a stronger, slower actor | `SOVEREIGN_DEMO_MODEL=qwen3.6:35b uv run python demo_tool_calling.py` (needs ~24 GB). |
+| Missing API key | Copy `.env.example` to `.env`, fill only the chosen key, and rerun setup. |
+| HTTP 401/403 | Stop; check key and account access. Do not blind-retry authentication failures. |
+| Ollama connection refused | Start the Ollama app or run `ollama serve`. |
+| Ollama first call is slow | Run `printf '' \| ollama run qwen3:latest` before class. |
+| Provider times out | Inspect the disposable workspace/provider logs; choose a smaller/faster model or correct reachability before retrying. |
+| Cloud data is not acceptable | Select `--provider ollama`; cloud choices send prompts to their vendors. |
 
-Config knobs (environment variables):
-- `SOVEREIGN_DEMO_MODEL` — which Ollama model to use (default `qwen3:latest`).
-- `SOVEREIGN_OLLAMA_URL` — Ollama endpoint (default `http://localhost:11434/api/chat`).
+## Offline verification
 
----
+Credential-free contract tests simulate both cloud wire formats and prove
+`.env` precedence, missing-key refusal, OpenAI function calls, and Anthropic
+tool-use/tool-result translation:
 
-## Where to go next
+```bash
+uv run python test_model_provider.py
+```
 
-- Read `demo_tool_calling.py` — a complete ZeoCore capability, the model's
-  tool-calling loop, and the governance check, side by side (~200 lines).
-- Read `demo_full_governance.py` — how little it takes to bind an actor to the
-  built-in `ollama` provider and run the full governed loop.
-- Open the **Sovereign Agent** textbook (`sovereign-agent demo store` is
-  Chapter 0) and keep going: `uvx sovereign-agent@latest doctor`.
+This does not claim live cloud execution without operator-supplied credentials.
 
-## Files in this folder
+## Files
 
-| File | What it is |
+| File | Purpose |
 |---|---|
-| `README.md` | this guide |
-| `setup.sh` | one-time setup |
-| `pyproject.toml` | the two PyPI packages, pinned |
-| `demo_tool_calling.py` | **Step 2** — live tool call + governance + refusal (in-process) |
-| `demo_full_governance.py` | **Step 3** — full governed loop via the built-in `ollama` provider |
+| `.env.example` | safe variable-name template; contains no secret |
+| `model_provider.py` | `.env`, selection, HTTP calls, and message normalization |
+| `demo_provider_worker.py` | turns a selected model response into an advisory `ActorReport` |
+| `demo_tool_calling.py` | Stage 2: ZeoCore tool call and refusal proof |
+| `demo_full_governance.py` | Stage 3: full governed organization loop |
+| `test_model_provider.py` | offline behavioral checks for all provider branches |
+| `setup.sh` | idempotent provider-aware setup |

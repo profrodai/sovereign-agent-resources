@@ -1,11 +1,11 @@
-"""LIVE demo: a real local LLM (qwen, via Ollama) does real tool-calling on a
+"""LIVE demo: a chosen real model does real tool-calling on a
 tool BUILT WITH ZEOCORE, and the Sovereign Agent governs the result.
 
-Nothing here is scripted. qwen decides to call the tool, the tool reads the
-real governed SQLite ledger, and the Sovereign Agent RE-VALIDATES qwen's
+Nothing here is scripted. The model decides to call the tool, the tool reads the
+real governed SQLite ledger, and the Sovereign Agent RE-VALIDATES the model's
 proposal against reality before it would ever be committed.
 
-Run:  python demo_tool_calling.py
+Run:  python demo_tool_calling.py --provider ollama|openai|anthropic
 """
 
 from __future__ import annotations
@@ -16,7 +16,6 @@ import re
 import sqlite3
 import sys
 import tempfile
-import urllib.request
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -40,10 +39,7 @@ from zeo_core.contracts import CapabilityResult
 from zeo_core.contracts.common.enums import EffectKind
 from zeo_core.contracts.capabilities.metadata import CapabilityExample
 
-import os
-
-MODEL = os.environ.get("SOVEREIGN_DEMO_MODEL", "qwen3:latest")
-OLLAMA = os.environ.get("SOVEREIGN_OLLAMA_URL", "http://localhost:11434/api/chat")
+from model_provider import ProviderConfig, chat, parse_provider_argument
 
 
 # =============================================================================
@@ -95,19 +91,8 @@ def inspect_inventory(
 CAP = bound_capability_of(inspect_inventory)
 
 
-def ollama_chat(messages: list[dict], tools: list[dict]) -> dict:
-    req = {"model": MODEL, "messages": messages, "tools": tools, "stream": False}
-    r = urllib.request.urlopen(
-        urllib.request.Request(
-            OLLAMA, data=json.dumps(req).encode(), headers={"Content-Type": "application/json"}
-        ),
-        timeout=600,
-    )
-    return json.load(r)["message"]
-
-
-def run_actor(db_path: Path) -> tuple[int, list[str]]:
-    """qwen, tool-calling, decides a restock quantity. Returns (units, transcript)."""
+def run_actor(db_path: Path, config: ProviderConfig) -> tuple[int, list[str]]:
+    """The chosen model decides a restock quantity via tool calling."""
     ctx = ToolContext(
         run_id="live-demo",
         tool_name="inspect_inventory",
@@ -140,7 +125,7 @@ def run_actor(db_path: Path) -> tuple[int, list[str]]:
     ]
     transcript: list[str] = []
     for _turn in range(6):
-        msg = ollama_chat(messages, [tool_schema])
+        msg = chat(config, messages, [tool_schema])
         messages.append(msg)
         calls = msg.get("tool_calls") or []
         if calls:
@@ -157,13 +142,20 @@ def run_actor(db_path: Path) -> tuple[int, list[str]]:
                     if result.data is not None
                     else {"error": f"unknown sku {args.get('sku')!r}; the only valid sku is SKU-VANILLA"}
                 )
-                transcript.append(f"qwen CALLED zeocore tool inspect_inventory({args}) -> {payload}")
+                transcript.append(
+                    f"{config.model} CALLED zeocore tool inspect_inventory({args}) -> {payload}"
+                )
                 messages.append(
-                    {"role": "tool", "content": json.dumps(payload), "tool_name": fn["name"]}
+                    {
+                        "role": "tool",
+                        "content": json.dumps(payload),
+                        "tool_name": fn["name"],
+                        "tool_call_id": call.get("id") or fn["name"],
+                    }
                 )
             continue
         content = msg.get("content") or ""
-        transcript.append(f"qwen SAID: {content.strip()[:300]}")
+        transcript.append(f"{config.model} SAID: {content.strip()[:300]}")
         m = re.search(r"RESTOCK_UNITS:\s*(\d+)", content)
         if m:
             return int(m.group(1)), transcript
@@ -171,16 +163,17 @@ def run_actor(db_path: Path) -> tuple[int, list[str]]:
         if m2:
             return int(m2.group(1)), transcript
         messages.append({"role": "user", "content": "Reply with exactly: RESTOCK_UNITS: <integer>."})
-    raise RuntimeError("qwen never produced a RESTOCK_UNITS proposal")
+    raise RuntimeError(f"{config.model} never produced a RESTOCK_UNITS proposal")
 
 
 def main() -> int:
+    config = parse_provider_argument(__doc__ or "Live governed tool-calling demo")
     root = Path(tempfile.mkdtemp(prefix="sovereign-live-"))
     db = Database(root / ".sovereign" / "organization.db")
     db_path = root / ".sovereign" / "organization.db"
 
     print("=" * 74)
-    print("SOVEREIGN AGENT — LIVE tool-calling with a local model (qwen via Ollama)")
+    print(f"SOVEREIGN AGENT — LIVE tool-calling via {config.name} ({config.model})")
     print("=" * 74)
     # Lucy's ice cream shop. seed_catalog needs >= 2 SKUs, each independent.
     seed_catalog(db, (
@@ -198,9 +191,10 @@ def main() -> int:
     print(f"\n1) A customer bought 2 tubs of vanilla ice cream. Ledger now: on_hand={before['on_hand']}, "
           f"reorder_point={before['reorder_point']} (below reorder). signal={sig.id}")
 
-    print(f"\n2) Handing the assignment to a REAL actor: {MODEL} (local, no cloud).")
+    print(f"\n2) Handing the assignment to a REAL actor: {config.model} via {config.name}.")
+    print(f"   Inference runs at {config.location}; the model still receives no authority.")
     print("   It is given ONE tool, built with ZeoCore: inspect_inventory. Watch it call it.\n")
-    units, transcript = run_actor(db_path)
+    units, transcript = run_actor(db_path, config)
     for line in transcript:
         print("   " + line)
     print(f"\n3) The actor PROPOSED: restock {units} units of SKU-VANILLA.")
@@ -210,7 +204,7 @@ def main() -> int:
     proposal = RestockProposal(sku="SKU-VANILLA", quantity=units)
     try:
         unit_cost, total = validate_restock(db, proposal)
-        print(f"   VALID: {units} units x {unit_cost}c (cost read from the ledger, not from qwen) "
+        print(f"   VALID: {units} units x {unit_cost}c (cost read from the ledger, not from the model) "
               f"= {total}c. This proposal is governable.")
     except Refusal as exc:
         print(f"   REFUSED by governance: {exc}")
@@ -222,7 +216,7 @@ def main() -> int:
         print("   (unexpected) 9999 units was allowed")
     except Refusal as exc:
         print(f"   REFUSED: {str(exc).splitlines()[0]}")
-    print("\nDONE — a real local LLM did real tool-calling on a ZeoCore-built tool, and the")
+    print("\nDONE — a real LLM did real tool-calling on a ZeoCore-built tool, and the")
     print("Sovereign Agent governed the result. Not scripted. Live.")
     return 0
 
