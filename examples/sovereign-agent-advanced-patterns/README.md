@@ -4,12 +4,12 @@
 Author:        Principal (sovereign-agent), operated by Rod Rivera
 Verified on:   2026-09-05
 Verified by:   Principal (sovereign-agent), operated by Rod Rivera
-Verified with: sovereign-agent 1.3.0, uv
+Verified with: sovereign-agent 1.4.0, uv
 Audience:      Agent builders who know the basic governed-work loop
 Time:          30–45 minutes, or about 5 minutes per focused lesson
 ```
 
-Six small programs turn Sovereign Agent 1.3's advanced mechanisms into
+Six small programs turn Sovereign Agent 1.4's advanced mechanisms into
 experiments you can read, run, and modify. Each lesson starts from a disposable
 SQLite organization, exercises one failure boundary with no model or network,
 and asserts the invariant before it prints the observation. The combined smoke
@@ -164,7 +164,7 @@ sleeping.
   teaching device that exercises real package code and real refusal paths.
 
 For the mechanisms in the complete governed-store scenario, run
-`uvx sovereign-agent@1.3.0 mechanisms`. For the build-break-repair treatment,
+`uvx sovereign-agent@1.4.0 mechanisms`. For the build-break-repair treatment,
 continue with the canonical
 [Sovereign Agent book](https://github.com/profrodai/sovereign-agent/tree/main/book).
 
