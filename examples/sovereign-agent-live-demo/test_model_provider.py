@@ -4,14 +4,19 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
+import sys
 import tempfile
+import threading
 import unittest
 from contextlib import contextmanager
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from io import BytesIO
 from pathlib import Path
 from unittest.mock import patch
 
 from model_provider import (
+    PROVIDER_TIMEOUT_SECONDS,
     ProviderConfig,
     ProviderConfigurationError,
     chat,
@@ -87,6 +92,14 @@ class ConfigurationTests(unittest.TestCase):
 
 
 class WireFormatTests(unittest.TestCase):
+    def test_default_request_deadline_precedes_outer_actor_fence(self):
+        payload = {"message": {"role": "assistant", "content": "ready"}}
+        config = ProviderConfig("ollama", "qwen3:latest", "https://example.invalid")
+        with patch("urllib.request.urlopen", return_value=Response(json.dumps(payload).encode())) as opened:
+            chat(config, [{"role": "user", "content": "hello"}])
+        self.assertEqual(opened.call_args.kwargs["timeout"], PROVIDER_TIMEOUT_SECONDS)
+        self.assertLess(PROVIDER_TIMEOUT_SECONDS, 60)
+
     def test_openai_tool_call_is_normalized(self):
         payload = {
             "choices": [
@@ -152,6 +165,99 @@ class WireFormatTests(unittest.TestCase):
         self.assertEqual(sent["messages"][-1]["content"][0]["tool_use_id"], "toolu_1")
         self.assertEqual(final["content"], "RESTOCK_UNITS: 1")
         self.assertEqual(opened.call_args_list[0].args[0].headers["X-api-key"], "secret")
+
+
+def _actor_report():
+    return json.dumps(
+        {
+            "status": "completed",
+            "proposed_restock_units": 1,
+            "proposed_checks": [],
+            "notes": "protocol-double proposal",
+        }
+    )
+
+
+class DemoProtocolDouble(BaseHTTPRequestHandler):
+    """Loopback-only endpoint for both scripts and all provider wire formats."""
+
+    def log_message(self, *_args):
+        return
+
+    def do_POST(self):  # noqa: N802 -- BaseHTTPRequestHandler contract
+        length = int(self.headers["content-length"])
+        request = json.loads(self.rfile.read(length))
+        anthropic = self.path == "/anthropic"
+        has_tools = bool(request.get("tools"))
+        if anthropic:
+            saw_result = any(
+                isinstance(message.get("content"), list)
+                and any(block.get("type") == "tool_result" for block in message["content"])
+                for message in request.get("messages", [])
+            )
+            if has_tools and not saw_result:
+                response = {"content": [{"type": "tool_use", "id": "tool-1", "name": "inspect_inventory", "input": {"sku": "SKU-VANILLA"}}]}
+            elif has_tools:
+                response = {"content": [{"type": "text", "text": "RESTOCK_UNITS: 1"}]}
+            else:
+                response = {"content": [{"type": "text", "text": _actor_report()}]}
+        else:
+            saw_result = any(message.get("role") == "tool" for message in request.get("messages", []))
+            if has_tools and not saw_result:
+                message = {
+                    "role": "assistant",
+                    "content": "",
+                    "tool_calls": [{"id": "tool-1", "type": "function", "function": {"name": "inspect_inventory", "arguments": {"sku": "SKU-VANILLA"}}}],
+                }
+            elif has_tools:
+                message = {"role": "assistant", "content": "RESTOCK_UNITS: 1"}
+            else:
+                message = {"role": "assistant", "content": _actor_report()}
+            response = {"message": message} if self.path == "/ollama" else {"choices": [{"message": message}]}
+        encoded = json.dumps(response).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(encoded)))
+        self.end_headers()
+        self.wfile.write(encoded)
+
+
+class EndToEndProviderTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.server = ThreadingHTTPServer(("127.0.0.1", 0), DemoProtocolDouble)
+        cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
+        cls.thread.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.server.server_close()
+
+    def test_both_demos_cross_every_provider_protocol(self):
+        port = self.server.server_address[1]
+        for provider in ("ollama", "openai", "anthropic"):
+            with self.subTest(provider=provider):
+                environment = os.environ.copy()
+                prefix = provider.upper()
+                environment.update(
+                    {
+                        f"{prefix}_URL": f"http://127.0.0.1:{port}/{provider}",
+                        f"{prefix}_MODEL": "protocol-double",
+                    }
+                )
+                if provider != "ollama":
+                    environment[f"{prefix}_API_KEY"] = "synthetic-test-key"
+                for script in ("demo_tool_calling.py", "demo_full_governance.py"):
+                    result = subprocess.run(
+                        [sys.executable, script, "--provider", provider],
+                        env=environment,
+                        check=False,
+                        capture_output=True,
+                        text=True,
+                        timeout=30,
+                    )
+                    self.assertEqual(result.returncode, 0, f"{provider} {script}\n{result.stdout}\n{result.stderr}")
 
 
 if __name__ == "__main__":
