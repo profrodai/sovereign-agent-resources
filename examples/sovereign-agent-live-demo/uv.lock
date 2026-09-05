@@ -234,14 +234,14 @@ wheels = [
 
 [[package]]
 name = "sovereign-agent"
-version = "1.2.0"
+version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ee/b0/bf90f3dcf3cabd0242646e3b70af8344f3f76b9066293394d0dab296ea2c/sovereign_agent-1.2.0.tar.gz", hash = "sha256:caf022d5f545234f25daf74a680a308cf4ad7986aab7060b61f334a2a4d74558", size = 201157, upload-time = "2026-09-02T16:11:37.752Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/06/4d/8a359219a6d08db3a2f4b2a816700c0da122d32149a85dac33f852c63d6c/sovereign_agent-1.3.0.tar.gz", hash = "sha256:5ba472a452369ecfc12cccf9d5246f2899cff2b59c5f6162cef6f141efbd9379", size = 217389, upload-time = "2026-09-05T04:20:15.994Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/36/02/c068d0d153981a51db43cc911c7a155fccc6b85200ced7685f5eb3d1c9f0/sovereign_agent-1.2.0-py3-none-any.whl", hash = "sha256:481e0f8e3d0f8a3cd046065eca5d59c8053ad00c38aa6201c93a91190cecaaea", size = 121917, upload-time = "2026-09-02T16:11:36.371Z" },
+    { url = "https://files.pythonhosted.org/packages/b3/cb/0427db72b8e9c813592c74eb70d8bed33c429c2656df96078ced251ec078/sovereign_agent-1.3.0-py3-none-any.whl", hash = "sha256:9291d244d0005f00081c63acac116c361a4bb1eddc78d3bfbb207772ad5786aa", size = 133393, upload-time = "2026-09-05T04:20:14.599Z" },
 ]
 
 [[package]]
@@ -255,7 +255,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "sovereign-agent", specifier = "==1.2.0" },
+    { name = "sovereign-agent", specifier = "==1.3.0" },
     { name = "zeocore", specifier = "==0.6.0" },
 ]
 
