@@ -7,6 +7,7 @@ repository root and migrated with `make migrate`.
 |---|---|---|
 | [`sovereign-agent-advanced-patterns`](sovereign-agent-advanced-patterns/) | Six offline labs for isolation, durable automation, recoverable context, session incarnations, bounded tool discovery, and hybrid memory | uv |
 | [`sovereign-agent-live-demo`](sovereign-agent-live-demo/) | A real local LLM tool-calls a ZeoCore capability; the Sovereign Agent governs the result — replay, refusal, and a full accepted loop | uv + Ollama (offline warmup needs neither model nor keys) |
+| [`zeocore-notion-governed-upsert`](zeocore-notion-governed-upsert/) | Build a cited, destination-bound `notion.page.upsert` request and prove its strict boundary without credentials or dispatch | uv |
 | [`zeocore-examples`](zeocore-examples/) | Two real applications rebuilt on zeocore: CSV cleaning, doc→Bluesky, metrics — typed tools doing actual work | uv |
 
 To add an example, follow [docs/RESOURCE_TEMPLATE.md](../docs/RESOURCE_TEMPLATE.md).
