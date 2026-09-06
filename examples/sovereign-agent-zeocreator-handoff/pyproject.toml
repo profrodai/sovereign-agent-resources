@@ -1,0 +1,16 @@
+[project]
+name = "sovereign-agent-zeocreator-handoff"
+version = "0.1.0"
+description = "A digest-bound handoff from governed Sovereign Agent work to ZEO Creator"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "sovereign-agent==1.4.0",
+    "zeo-creator @ git+https://github.com/profrodai/zeocreator.git@4d807f68c330a075e27c7b4714ca0ebf2e88f948",
+]
+
+[tool.uv]
+package = false
+
+[tool.sovereign-catalog]
+smoke = "python check_examples.py"
