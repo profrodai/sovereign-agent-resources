@@ -70,7 +70,7 @@ rather than a bare return value you have to trust.
 
 ## Verified against
 
-`zeocore==0.6.0`, installed from the committed `uv.lock` and confirmed with
-`uv run python -c "import zeo_core; print(zeo_core.__version__)"` → `0.6.0`.
+`zeocore==0.9.0`, installed from the committed `uv.lock` and confirmed with
+`uv run python -c "import zeo_core; print(zeo_core.__version__)"` → `0.9.0`.
 The `Hello, World!` output above was produced by running the command shown,
 not transcribed from the upstream tutorial.
