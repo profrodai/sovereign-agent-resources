@@ -7,7 +7,7 @@ dependencies = [
   # The two frameworks, straight from PyPI — the same thing you'd install in
   # any real project. No dev repo, no editable installs.
   "sovereign-agent==1.4.0", # the governance framework
-  "zeocore==0.6.0",         # the capability/tool framework the tool is built with
+  "zeocore==0.9.0",         # the capability/tool framework the tool is built with
 ]
 
 [tool.uv]
