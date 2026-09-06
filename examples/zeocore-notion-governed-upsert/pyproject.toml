@@ -1,0 +1,15 @@
+[project]
+name = "zeocore-notion-governed-upsert"
+version = "0.1.0"
+description = "Offline proof of Zeocore's cited and idempotent governed Notion page-upsert contract"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "zeocore[notion]==0.9.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.sovereign-catalog]
+smoke = "python src/main.py"
