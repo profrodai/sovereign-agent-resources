@@ -2,9 +2,9 @@
 
 ```text
 Author:        Rod Rivera
-Verified on:   2026-09-05
-Verified by:   Principal (sovereign-agent), operated by Rod Rivera
-Verified with: sovereign-agent 1.4.0 / zeocore 0.6.0, uv
+Verified on:   2026-09-09
+Verified by:   Zeocore Principal, operated by Rod Rivera; local smoke verification
+Verified with: sovereign-agent 1.4.0 / zeocore 0.10.0, uv
 Audience:      Practitioners learning to separate model intelligence from authority
 Time:          ~20 minutes after provider setup
 ```

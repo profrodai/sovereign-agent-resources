@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.14"
 license = { text = "MIT" }
 dependencies = [
-    "zeocore[drive]==0.9.0",
+    "zeocore[drive]==0.10.0",
     "polars>=1.0.0",
 ]
 
@@ -21,3 +21,6 @@ dev = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/data_cleaning"]
+
+[tool.sovereign-catalog]
+smoke = "python check_examples_v1.py"

@@ -8,8 +8,8 @@ case, that gets found here, not assumed away; and (b) teach other agents
 ("other little Claudes") how to build a real application on zeocore, by
 example, not by prose alone.
 
-It rebuilds two existing, small public course-artifact repos as two
-separate zeocore-powered example applications:
+This maintained catalog directory contains three applications. Two rebuild
+small public course artifacts, and the third composes document and social tools:
 
 - **[`apps/data_cleaning/`](apps/data_cleaning/)** — rebuilds
   [`agency-data-onboarding-kit`](https://github.com/zeroemployeeorg/agency-data-onboarding-kit)
@@ -32,6 +32,10 @@ separate zeocore-powered example applications:
   automated hours can't exceed total hours) — see that app's own README for
   the exact bug, reproduced, and the fix.
 
+- **[`apps/doc_to_bluesky/`](apps/doc_to_bluesky/)** — Google Docs and Bluesky
+  tool composition with an offline missing-service path and explicitly configured
+  live account setup. Read [account tracks](../../docs/INTEGRATIONS.md) first.
+
 Neither source repo is modified by this work — both stay exactly as they
 are; this is a fresh rebuild in a new, separate repo.
 
@@ -45,8 +49,8 @@ the full Google Cloud OAuth setup.
 The short version, for the zero-credential dummy-data path:
 
 ```bash
-cd apps/data_cleaning && pip install -e . && python run_demo.py
-cd apps/metrics_tracker && pip install -e . && python run_demo.py
+uv run --project apps/data_cleaning python apps/data_cleaning/check_examples_v1.py
+uv run --project apps/metrics_tracker python apps/metrics_tracker/check_examples_v1.py
 ```
 
 Both apps run against dummy/synthetic data with **zero real credentials

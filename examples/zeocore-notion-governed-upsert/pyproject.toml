@@ -1,11 +1,11 @@
 [project]
-name = "zeocore-supabase-bounded-data"
+name = "zeocore-notion-governed-upsert"
 version = "0.1.0"
-description = "Offline proof of Zeocore's bounded Supabase database integration surface"
+description = "Offline proof of Zeocore's cited and idempotent governed Notion page-upsert contract"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "zeocore[supabase]==0.10.0",
+    "zeocore[notion]==0.10.0",
 ]
 
 [tool.uv]

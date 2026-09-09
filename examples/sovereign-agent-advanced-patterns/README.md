@@ -2,8 +2,8 @@
 
 ```text
 Author:        Principal (sovereign-agent), operated by Rod Rivera
-Verified on:   2026-09-05
-Verified by:   Principal (sovereign-agent), operated by Rod Rivera
+Verified on:   2026-09-09
+Verified by:   Zeocore Principal, operated by Rod Rivera; local smoke verification
 Verified with: sovereign-agent 1.4.0, uv
 Audience:      Agent builders who know the basic governed-work loop
 Time:          30–45 minutes, or about 5 minutes per focused lesson

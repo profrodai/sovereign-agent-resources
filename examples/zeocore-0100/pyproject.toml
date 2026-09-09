@@ -1,11 +1,11 @@
 [project]
-name = "zeocore-supabase-bounded-data"
+name = "zeocore-0100"
 version = "0.1.0"
-description = "Offline proof of Zeocore's bounded Supabase database integration surface"
+description = "Offline marketing, managed environments, service profiles and authoring receipts"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "zeocore[supabase]==0.10.0",
+    "zeocore[jupytext,notebook,pandoc]==0.10.0",
 ]
 
 [tool.uv]

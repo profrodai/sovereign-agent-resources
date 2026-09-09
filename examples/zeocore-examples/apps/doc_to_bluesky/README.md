@@ -2,9 +2,9 @@
 
 ```text
 Author:        Rod Rivera
-Verified on:   2026-09-02
-Verified by:   Sparring (sovereign-agent), operated by Rod Rivera
-Verified with: zeocore 0.6.0, uv
+Verified on:   2026-09-09
+Verified by:   Zeocore Principal, operated by Rod Rivera; local smoke verification
+Verified with: zeocore 0.10.0, uv
 Audience:      Builders learning a governed document-to-social pipeline
 Time:          ~30 minutes
 ```
@@ -39,11 +39,10 @@ brew install uv
 Every command is copy-pasteable, in order, assuming nothing but `git` and `uv`.
 
 ```bash
-git clone https://github.com/zeroemployeeorg/zeocore-examples.git
-cd zeocore-examples/apps/doc_to_bluesky
+git clone https://github.com/profrodai/sovereign-agent-resources.git
+cd sovereign-agent-resources/examples/zeocore-examples/apps/doc_to_bluesky
 
-uv venv --python 3.14
-uv pip install -e .
+uv sync --frozen
 
 uv run python run_demo.py
 ```
@@ -58,10 +57,10 @@ If you are installing zeocore into your own project rather than running this
 app, **use the pinned form**:
 
 ```bash
-uv pip install "zeocore[calendar,bluesky]>=0.6.0"
+uv pip install "zeocore[calendar,bluesky]==0.10.0"
 ```
 
-**Do not drop the `>=0.6.0`.** Within minutes of 0.6.0 being published, a bare
+**Keep the exact release pin.** Within minutes of 0.6.0 being published, a bare
 install resolved **0.5.0** from a stale package-index cache — and **0.5.0
 contains neither the Google Docs nor the Bluesky integration.** You would get:
 
@@ -75,12 +74,19 @@ installing a version without the integrations.**
 
 ### There is no `[docs]`, `[sheets]` or `[slides]` extra
 
-The Google integrations **share one dependency set**. `[calendar]` (or
-`[google]`, `[drive]`, `[gmail]`, `[all]`) gives you Docs, Sheets, Slides,
-Calendar, Drive and Gmail together. Asking for `zeocore[sheets]` is a
-resolution error. Bluesky is its own extra, `[bluesky]`.
+The Google integrations share their SDK dependency set. `[calendar]` (or
+`[google]`, `[drive]`, `[gmail]`, `[all]`) supplies the dependencies for Docs,
+Calendar, Drive and Gmail. This does not create Sheets or Slides service APIs.
+Use only extras declared by the released package; unknown extras may be ignored
+with a warning by an installer. Bluesky is its own extra, `[bluesky]`.
 
 ## Credentials
+
+Start with the [test and production account tracks](../../../../docs/INTEGRATIONS.md)
+and the tagged Google/Bluesky setup guides. Keep test OAuth clients, Google files,
+Bluesky accounts/app passwords and local state distinct from production. The
+live wiring below uses direct construction; use managed launch for explicit
+track selection before initializing these clients.
 
 Copy `.env.example` to `.env` and fill it in **locally only** — `.env` is
 gitignored and must never be committed.
