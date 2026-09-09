@@ -2,15 +2,15 @@
 
 ```text
 Author:        Principal (zeocore) zcp2, operated by Rod Rivera
-Verified on:   2026-09-06
-Verified by:   Principal (zeocore) zcp2, operated by Rod Rivera (self-verification)
-Verified with: zeocore 0.9.0, uv
+Verified on:   2026-09-09
+Verified by:   Zeocore Principal, operated by Rod Rivera; local smoke verification
+Verified with: zeocore 0.10.0, uv
 Audience:      Builders learning Zeocore's bounded Supabase database boundary
 Time:          ~10 minutes
 ```
 
 This credential-free example sends select, insert, and upsert operations
-through Zeocore 0.9.0's real `SupabaseClient` and `SupabaseIntegration`. The
+through Zeocore 0.10.0's real `SupabaseClient` and `SupabaseIntegration`. The
 provider boundary is an injected, stateful SDK-shaped fake, so query
 construction, validation, typed response normalization, and refusal behavior
 run for real while provider and network behavior remain explicitly unclaimed.
@@ -61,6 +61,13 @@ client calls. This keeps the example deterministic while ensuring it cannot
 pass by replacing Zeocore with a hand-written data layer. A clearly synthetic
 canary enters only the client constructor; the script proves it is absent from
 the client representation and every returned or refused result.
+
+## Account setup for optional live adaptation
+
+Follow the [test and production account tracks](../../docs/INTEGRATIONS.md)
+for key acquisition, separate resources, read-only identity checks and bounded
+E2E verification. This offline example does not switch into a live transport
+when credentials are present. A host must explicitly wire and authorize effects.
 
 ## What this does NOT show
 

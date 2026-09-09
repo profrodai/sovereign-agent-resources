@@ -2,9 +2,9 @@
 
 ```text
 Author:        Rod Rivera
-Verified on:   2026-09-02
-Verified by:   Sparring (sovereign-agent), operated by Rod Rivera
-Verified with: zeocore 0.6.0, uv
+Verified on:   2026-09-09
+Verified by:   Zeocore Principal, operated by Rod Rivera; local smoke verification
+Verified with: zeocore 0.10.0, uv
 Audience:      Builders learning governed metric collection on zeocore
 Time:          ~30 minutes
 ```
@@ -81,13 +81,18 @@ an absolute figure) means synthetic weekly numbers are trivially safe to
 fabricate. `run_demo.py` submits eight weeks of plausible fake progression
 (automation climbing from ~20% to ~75%) directly, no fixture file required.
 
+## Catalog verification
+
+The catalog now executes `check_examples_v1.py` after installing the exact pin. It checks two independently calculated weeks, persisted database rows, and two invalid inputs leaving those rows unchanged.
+
 ## Run it
 
 No real credentials needed — everything runs against a local DuckDB file
 created fresh in a temp directory.
 
 ```bash
-cd apps/metrics_tracker
-pip install -e .
-python run_demo.py
+# From this resource directory
+uv sync --frozen
+uv run --frozen python run_demo.py
+uv run --frozen python check_examples_v1.py
 ```

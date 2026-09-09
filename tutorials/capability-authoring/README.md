@@ -2,9 +2,9 @@
 
 ```text
 Author:        Sparring (zeocore seat), operated by Rod Rivera
-Verified on:   2026-09-02
-Verified by:   Sparring (zeocore seat), operated by Rod Rivera
-Verified with: zeocore 0.6.0, uv
+Verified on:   2026-09-09
+Verified by:   Zeocore Principal, operated by Rod Rivera; local smoke verification
+Verified with: zeocore 0.10.0, uv
 Audience:      Builders writing their first typed, inspectable zeocore operation
 Time:          ~15 minutes
 ```
@@ -70,7 +70,7 @@ rather than a bare return value you have to trust.
 
 ## Verified against
 
-`zeocore==0.9.0`, installed from the committed `uv.lock` and confirmed with
-`uv run python -c "import zeo_core; print(zeo_core.__version__)"` → `0.9.0`.
+`zeocore==0.10.0`, installed from the committed `uv.lock` and confirmed with
+`uv run python -c "import zeo_core; print(zeo_core.__version__)"` → `0.10.0`.
 The `Hello, World!` output above was produced by running the command shown,
 not transcribed from the upstream tutorial.

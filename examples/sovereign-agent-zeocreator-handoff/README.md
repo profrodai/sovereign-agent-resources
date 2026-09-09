@@ -2,8 +2,8 @@
 
 ```text
 Author:        Principal (sovereign-agent), operated by Rod Rivera
-Verified on:   2026-09-06
-Verified by:   Principal (sovereign-agent), operated by Rod Rivera
+Verified on:   2026-09-09
+Verified by:   Zeocore Principal, operated by Rod Rivera; local smoke verification
 Verified with: sovereign-agent 1.4.0 / zeo-creator 0.2.0.dev0 at 4d807f68c330a075e27c7b4714ca0ebf2e88f948 / zeocore 0.9.0, uv
 Audience:      Builders connecting governed work to creator-domain capabilities
 Time:          15–20 minutes
@@ -148,11 +148,12 @@ exception visible and immutable in both `pyproject.toml` and `uv.lock`:
 zeo-creator @ git+https://github.com/profrodai/zeocreator.git@4d807f68c330a075e27c7b4714ca0ebf2e88f948
 ```
 
-That commit requires Zeocore 0.9.0, which resolves transitively. The repository's
-shared `ZEOCORE_VERSION` remains 0.6.0 because this resource does not claim to be
-a Zeocore catalog example and does not directly pin Zeocore. When ZEO Creator is
-released, moving this resource to a registry version is a separate reviewed
-migration—not a lockfile refresh to perform casually.
+That immutable commit requires exactly Zeocore 0.9.0, which resolves transitively.
+This handoff therefore retains 0.9.0 while the catalog's direct Zeocore consumers
+move to 0.10.0. It is revalidated against its actual locked environment; the
+0.10.0 catalog update does not claim this application has migrated. Changing
+ZEO Creator's immutable dependency requires its own reviewed compatibility
+migration. No dependency override or lock refresh silently replaces that contract.
 
 ## Break-it experiments
 

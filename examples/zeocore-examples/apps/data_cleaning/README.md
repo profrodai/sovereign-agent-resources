@@ -2,9 +2,9 @@
 
 ```text
 Author:        Rod Rivera
-Verified on:   2026-09-02
-Verified by:   Sparring (sovereign-agent), operated by Rod Rivera
-Verified with: zeocore 0.6.0, uv
+Verified on:   2026-09-09
+Verified by:   Zeocore Principal, operated by Rod Rivera; local smoke verification
+Verified with: zeocore 0.10.0, uv
 Audience:      Builders learning typed zeocore tools on real CSV work
 Time:          ~30 minutes
 ```
@@ -54,15 +54,20 @@ for this repo, in the same shape/spirit as the original repo's own
 `samples/*.csv` (messy casing, duplicate rows, missing fields, a `test@`
 junk row) — adapted, not copied verbatim.
 
+## Catalog verification
+
+The catalog now executes `check_examples_v1.py` after installing the exact pin. It checks the independently counted synthetic inputs, normalized unique email addresses and both actual output CSVs.
+
 ## Run it
 
 No real credentials needed for this path — everything runs against the
 dummy CSVs above.
 
 ```bash
-cd apps/data_cleaning
-pip install -e .
-python run_demo.py
+# From this resource directory
+uv sync --frozen
+uv run --frozen python run_demo.py
+uv run --frozen python check_examples_v1.py
 ```
 
 This runs all 5 tools end to end and prints real `CapabilityResult` output

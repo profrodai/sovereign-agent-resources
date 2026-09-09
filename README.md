@@ -19,7 +19,7 @@ Then go deeper, in order:
 
 1. [The book](https://github.com/profrodai/sovereign-agent/tree/main/book) — thirteen chapters that build a Zero-Employee Organization from an empty directory, break it on purpose, and repair it. Every code block executes; every output is byte-verified.
 2. [`examples/sovereign-agent-live-demo`](examples/sovereign-agent-live-demo) — a **real local LLM** tool-calls a ZeoCore capability and the Sovereign Agent governs the result. `bash setup.sh`, then three `uv run` commands.
-3. [`examples/zeocore-examples`](examples/zeocore-examples) — two real applications rebuilt on zeocore: typed tools doing actual work.
+3. [`examples/zeocore-examples`](examples/zeocore-examples) — three real applications rebuilt on zeocore: typed tools doing actual work.
 
 **Building something specific.** Open the category catalog that matches your goal: [examples](examples/README.md), [tutorials](tutorials/README.md), [patterns](patterns/README.md).
 
@@ -36,6 +36,19 @@ Then go deeper, in order:
 - **Not a support channel.** Product issues belong on the product repositories; questions about material here belong in [Discussions](../../discussions/).
 
 ---
+
+## Zeocore 0.10.0 catalog update
+
+The [release labs](examples/zeocore-0100/README.md) cover HubSpot and Kit marketing,
+managed test/production state, native service resolution, Gemini request
+construction, and local conversion/execution receipts. Read the
+[integration account tracks](docs/INTEGRATIONS.md) for exact key acquisition,
+test-account and production-account instructions before connecting real services.
+The catalog also includes the governed Notion and bounded Supabase resources.
+
+The direct Zeocore pins now use the published 0.10.0 release. Sovereign
+Agent remains at 1.4.0. The ZEO Creator handoff retains its documented immutable
+Git dependency and transitive Zeocore 0.9.0; it is revalidated in that environment.
 
 ## Featured resources
 

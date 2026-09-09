@@ -25,21 +25,21 @@ real Google Drive integration work end to end.
 
 ### 1. Install Python
 
-You need Python 3.10 or newer. Check what you have:
+You need Python 3.14 or newer. Check what you have:
 
 ```bash
 python3 --version
 ```
 
-If that's below 3.10, install a newer Python first (e.g. via
+If that's below 3.14, install a newer Python first (e.g. via
 [python.org](https://www.python.org/downloads/) or your OS package
 manager) — that's outside this guide's scope.
 
 ### 2. Get the code
 
 ```bash
-git clone https://github.com/zeroemployeeorg/zeocore-examples.git
-cd zeocore-examples
+git clone https://github.com/profrodai/sovereign-agent-resources.git
+cd sovereign-agent-resources/examples/zeocore-examples
 ```
 
 ### 3. Install and run the data-cleaning app
@@ -76,6 +76,13 @@ that's all you wanted to see, you're finished.
 ---
 
 ## Path 2 — the real-integration path (Google Drive, ~20 minutes, one-time)
+
+For the current release, first follow the catalog's
+[integration account tracks](../../docs/INTEGRATIONS.md) and its tagged Google
+setup guide. Use separate test and production Google projects/accounts, OAuth
+clients and local credential state; validate selected identity read-only before
+a disposable download. This legacy walkthrough explains the direct-construction
+path. Managed launch is the current opt-in boundary for distinct tracks.
 
 This proves `apps/data_cleaning`'s `DownloadFromDriveTool` against a REAL
 Google Drive file in a real (you control it — use a throwaway/test Google
