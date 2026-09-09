@@ -47,7 +47,7 @@ PASS existing authoring output refused and unchanged
 OFFLINE: no live delivery, provider generation or publication
 ```
 
-Each of the five named scripts is also independently runnable with
+Each of the six named offline scripts is also independently runnable with
 `uv run python src/<name>.py`. They retain the output and public API call shapes
 of the upstream release examples. Their synthetic credentials stay within
 injected in-memory HTTP transports; they are not real provider credentials.
@@ -122,3 +122,37 @@ output path never enters the hosted request; the server owns connector revision.
 
 The original `src/main.py` remains as the earlier six-lab runner. `main_v2.py` is
 the catalog smoke including the additional cross-profile proof.
+
+
+## Designated live Drive acceptance
+
+`src/drive_live_acceptance_v1.py` is a separate opt-in acceptance runner and is
+never invoked by the catalog smoke. It uses only the fixed ZEOconnect production
+origin. Provision distinct Web/Broker identities, the reviewed member API, its
+browser consent flow and a dedicated Google test connection first. Choose a
+small CSV with an `amount` column; independently record its SHA256 and total.
+
+Launch the script through the Zeocore integration environment launcher in
+**test mode with live backend**, using an unused private test state namespace.
+The launcher must set `ZEO_INTEGRATION_MODE=test`,
+`ZEO_INTEGRATION_BACKEND=live` and the absolute, resolved
+`ZEO_INTEGRATION_STATE_DIR` ending in `/test`. macOS Keychain stores the session;
+an existing session causes refusal rather than replacement. No token is printed.
+
+```bash
+uv run --frozen python src/drive_live_acceptance_v1.py --help
+```
+
+The required live arguments are `--execute-live`, `--connection <opaque-handle>`,
+`--file-id <selected-csv>`, `--expected-sha256 <independent-digest>` and
+`--expected-total <integer>`. The runner presents the browser pairing URL and
+user code, waits up to ten minutes, verifies the exact selected connection/file,
+reads and independently checks the artifact, rotates the session, revokes the
+device and demands an actual protocol-versioned server401 on the next read.
+A local missing-session error or network failure cannot pass the revocation check.
+Provider bytes are temporarily local and are omitted from the final JSON evidence.
+
+A failure before confirmed revocation preserves the paired session for repair;
+use the member device-revocation workflow before reusing that namespace. The
+current catalog PR validates only this runner's inert help/import path. It does
+not claim this live acceptance has run or that deployment prerequisites exist.
