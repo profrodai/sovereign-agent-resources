@@ -9,7 +9,7 @@ Audience:      Capability authors and hosts adopting marketing and authoring ope
 Time:          15 minutes offline; live account setup is separate
 ```
 
-Run six local labs using the public package APIs: HubSpot marketing, Kit
+Run seven local labs using the public package APIs: HubSpot marketing, Kit
 marketing, explicit test/production state, native service profiles, a Gemini
 request and an authoring build. The smoke checks exact output against independent
 expectations and refuses a second build into an existing destination.
@@ -25,7 +25,7 @@ From this directory, using Python 3.14 or newer:
 
 ```bash
 uv sync --frozen
-uv run --frozen python src/main.py
+uv run --frozen python src/main_v2.py
 ```
 
 No account, API key, Ollama, Google SDK or Pandoc binary is needed for that
@@ -36,6 +36,7 @@ repository fixtures and run in a fresh local Python kernel.
 Expected summary:
 
 ```text
+PASS drive_profiles_v1.py
 PASS hubspot_usage.py
 PASS kit_usage.py
 PASS environment_usage.py
@@ -108,3 +109,16 @@ The provider examples and authoring reference are adapted from Zeocore's 0.10.0
 release examples under its MIT license. They depend on the installed framework;
 no framework implementation is vendored. The catalog smoke adds independent
 expected stdout and repeat-build refusal checks around those public consumers.
+
+## One business function across placements
+
+`uv run python src/drive_profiles_v1.py` executes one unchanged CSV-total function
+under fake, local and hosted resolution. Each reads the selected bytes, persists
+them locally, and computes the independently expected total10. The local service
+and hosted transport are injected fixtures; this is composition evidence, not live
+Google or ZEOconnect acceptance. Empty catalogs, missing selected resources and
+multiple connections return their separate states without dispatch. The local
+output path never enters the hosted request; the server owns connector revision.
+
+The original `src/main.py` remains as the earlier six-lab runner. `main_v2.py` is
+the catalog smoke including the additional cross-profile proof.
