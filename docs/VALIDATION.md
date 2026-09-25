@@ -12,9 +12,6 @@ The install gate's version assertion is the anti-hollow check: a project can
 carry a plausible-looking lockfile and still resolve to the wrong version —
 `check_project.py` reads the version out of the actual installed environment.
 
-CI (`.github/workflows/validate.yml`) runs the offline gate on every push and
-PR, the install gate on every push, and asks PyPI weekly (`upstream` job)
-whether the catalog has silently gone stale.
-
-The fleet `zeo` workflow additionally runs `make verify` in its certify lane
-on main; `verify-fast` aliases the offline gate for the fast PR lane.
+The repository has no GitHub Actions workflows: CI does not run on GitHub
+(operator direction of 2026-09-25, under R-36). Run `make ci` (or `make verify`)
+locally; `make outdated` asks PyPI whether the catalog has gone stale.
